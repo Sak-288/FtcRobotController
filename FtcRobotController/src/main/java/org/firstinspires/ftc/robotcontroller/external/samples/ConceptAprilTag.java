@@ -101,9 +101,9 @@ public class ConceptAprilTag extends LinearOpMode {
                 telemetry.update();
 
                 // Save CPU resources; can resume streaming when needed.
-                if (gamepad1.dpad_down) {
-                    visionPortal.stopStreaming();
-                } else if (gamepad1.dpad_up) {
+                if (gamepad2.a) {
+                    visionPortal.stopStreaming(); //
+                } else if (gamepad2.b) {
                     visionPortal.resumeStreaming();
                 }
 
