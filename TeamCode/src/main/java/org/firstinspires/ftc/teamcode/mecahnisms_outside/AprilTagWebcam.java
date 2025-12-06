@@ -60,26 +60,59 @@ public class AprilTagWebcam {
         return detectedTags;
     }
 
-    public void displayDetectionTelemetry(AprilTagDetection detectedId) {
+    public List<Double> displayDetectionTelemetry(AprilTagDetection detectedId) {
+
         if (detectedId == null) {
             telemetry.addLine("No Tag Detected");
-            return;
+            telemetry.update();
+            // Return null if no tag is detected, which is correctly handled in your TeleOp
+            return null;
         }
+        // Clear the telemetry display before adding new data for a clean update
+        telemetry.clear();
 
-        telemetry.addLine(String.format("\n==== (ID %d)", detectedId.id));
-        if (detectedId.metadata != null) {
-            telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
-                    detectedId.ftcPose.x, detectedId.ftcPose.y, detectedId.ftcPose.z));
-            telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
-                    detectedId.ftcPose.pitch, detectedId.ftcPose.roll, detectedId.ftcPose.yaw));
-            telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (Range, Bear, Elev)",
-                    detectedId.ftcPose.range, detectedId.ftcPose.bearing, detectedId.ftcPose.elevation));
+        List<Double> TagCoords = new ArrayList<>();
+
+        if (detectedId == null) {
+            telemetry.addLine("No Tag Detected");
+            // Always call update, even if no tag is detected, to show the "No Tag Detected" message
+            telemetry.update();
         } else {
-            telemetry.addLine(String.format("Unknown Tag ID: %d", detectedId.id));
-            telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detectedId.center.x, detectedId.center.y));
-        }
-    }
+            telemetry.addLine(String.format("Tag ID : " + detectedId.id));
 
+            // NOW for the real values to be USED in the program
+            TagCoords.add(detectedId.ftcPose.x);
+            TagCoords.add(detectedId.ftcPose.y);
+            TagCoords.add(detectedId.ftcPose.yaw);
+
+            // Tis temp - only for tel
+            double SPEED = 1.0;
+
+            double DAMP_FACTOR = 0.05;
+
+            double y = (TagCoords.get(1) - 15) * SPEED * DAMP_FACTOR;
+            double x = -TagCoords.get(0) * SPEED * DAMP_FACTOR;
+            double rx = -TagCoords.get(2) * SPEED * 1/120;
+
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+            double frontLeftPower = (y + x - rx) / denominator;
+            double backLeftPower = (-y + x + rx) / denominator;
+            double frontRightPower = (-y + x - rx) / denominator;
+            double backRightPower = (y + x + rx) / denominator;
+
+            telemetry.addLine(String.format("X " + TagCoords.get(0)));
+            telemetry.addLine(String.format("Y " + TagCoords.get(1)));
+            telemetry.addLine(String.format("Yaw " + TagCoords.get(2)));
+            telemetry.addLine(String.format("frontLeftPower : " + frontLeftPower));
+            telemetry.addLine(String.format("backLeftPower : " + backLeftPower));
+            telemetry.addLine(String.format("frontRightMotor : " + frontRightPower));
+            telemetry.addLine(String.format("backRightMotor : " + backRightPower));
+
+            telemetry.update();
+        }
+
+        return TagCoords;
+    }
     public AprilTagDetection getTagBySpecificId(int id) {
         for (AprilTagDetection detection : detectedTags) {
             if (detection.id == id) {
