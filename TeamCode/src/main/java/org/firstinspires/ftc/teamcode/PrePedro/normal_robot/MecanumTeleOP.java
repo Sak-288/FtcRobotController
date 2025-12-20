@@ -21,8 +21,8 @@ public class MecanumTeleOP extends LinearOpMode {
         DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
         DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
 
-        DcMotor IntakeMotor = hardwareMap.dcMotor.get("IntakeMotor");
-        //DcMotor RampMotor = hardwareMap.dcMotor.get("RampMotor");
+        // IntakeMotor = hardwareMap.dcMotor.get("IntakeMotor");
+        DcMotor RampMotor = hardwareMap.dcMotor.get("RampMotor");
 
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
@@ -31,8 +31,8 @@ public class MecanumTeleOP extends LinearOpMode {
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        IntakeMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        //RampMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        //IntakeMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        RampMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         AprilTagWebcam aprilTagWebcam = new AprilTagWebcam(); // Instantiate new webcam
         aprilTagWebcam.init(hardwareMap, telemetry);
@@ -86,8 +86,8 @@ public class MecanumTeleOP extends LinearOpMode {
                     backLeftMotor.setPower(backLeftPower);
                     frontRightMotor.setPower(frontRightPower);
                     backRightMotor.setPower(backRightPower);
-                    IntakeMotor.setPower(intakePow);
-                    //RampMotor.setPower(rampPow);
+                    //IntakeMotor.setPower(intakePow);
+                    RampMotor.setPower(rampPow);
                 }
                 else {
                     boolean quarterSpeed = gamepad1.x;
@@ -123,8 +123,8 @@ public class MecanumTeleOP extends LinearOpMode {
                     backLeftMotor.setPower(backLeftPower);
                     frontRightMotor.setPower(frontRightPower);
                     backRightMotor.setPower(backRightPower);
-                    IntakeMotor.setPower(intakePow);
-                    //RampMotor.setPower(rampPow);
+                    //IntakeMotor.setPower(intakePow);
+                    RampMotor.setPower(rampPow);
                 }
             } else {
                 // Gets the speed you wanna go at
@@ -159,8 +159,8 @@ public class MecanumTeleOP extends LinearOpMode {
                 backLeftMotor.setPower(backLeftPower);
                 frontRightMotor.setPower(frontRightPower);
                 backRightMotor.setPower(backRightPower);
-                IntakeMotor.setPower(intakePow);
-                //RampMotor.setPower(rampPow);
+                //IntakeMotor.setPower(intakePow);
+                RampMotor.setPower(rampPow);
             }
         }
     }
