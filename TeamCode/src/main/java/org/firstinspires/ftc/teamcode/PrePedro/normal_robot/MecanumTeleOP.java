@@ -2,166 +2,112 @@ package org.firstinspires.ftc.teamcode.PrePedro.normal_robot;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-
-import org.firstinspires.ftc.teamcode.PrePedro.normal_robot.mecahnisms_outside.AprilTagWebcam;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-
-import java.util.List;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @TeleOp
 public class MecanumTeleOP extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         // Declare our motors
-        // Make sure your ID's match your configuration
-        DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
-        DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
-        DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
-        DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
+        DcMotorEx frontLeftMotor = hardwareMap.get(DcMotorEx.class, "FLM");
+        DcMotorEx backLeftMotor = hardwareMap.get(DcMotorEx.class, "BLM");
+        DcMotorEx frontRightMotor = hardwareMap.get(DcMotorEx.class, "FRM");
+        DcMotorEx backRightMotor = hardwareMap.get(DcMotorEx.class, "BRM");
+        DcMotorEx IntakeMotor = hardwareMap.get(DcMotorEx.class, "IM");
+        DcMotorEx RampMotor = hardwareMap.get(DcMotorEx.class, "RM");
+        DcMotorEx leftExpulsionMotor = hardwareMap.get(DcMotorEx.class, "LEM");
+        DcMotorEx rightExpulsionMotor = hardwareMap.get(DcMotorEx.class, "REM");
 
-        // IntakeMotor = hardwareMap.dcMotor.get("IntakeMotor");
-        DcMotor RampMotor = hardwareMap.dcMotor.get("RampMotor");
+        // Set the mode
+        frontLeftMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        backLeftMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        frontRightMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        backRightMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        IntakeMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        RampMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        leftExpulsionMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        rightExpulsionMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        // Reverse the right side motors. This may be wrong for your setup.
-        // If your robot moves backwards when commanded to go forwards,
-        // reverse the left side instead.
-        // See the note about this earlier on this page.
-        frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        // Set Zero Power Behaviour
+        frontLeftMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        backLeftMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        frontRightMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        backRightMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        IntakeMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        RampMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        leftExpulsionMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        rightExpulsionMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        //IntakeMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        RampMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        // Setting motor directions
+        frontLeftMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        backLeftMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        frontRightMotor.setDirection(DcMotorEx.Direction.REVERSE); // Reverse the right ones, or the left ones, depending on robot orientation
+        backRightMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        IntakeMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        RampMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        leftExpulsionMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        rightExpulsionMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
-        AprilTagWebcam aprilTagWebcam = new AprilTagWebcam(); // Instantiate new webcam
-        aprilTagWebcam.init(hardwareMap, telemetry);
+        // CONSTANTS at initialization
+        double DT_MOTOR_RPM = 6000.0 / 20.0;
+        double INTAKE_MOTOR_RPM = 125;
+        double RAMP_MOTOR_RPM = 6000.0 / 3.0;
+        double EXPULSION_MOTOR_RPM = 6000.0 / 3.0;
 
-        double SPEED = 1.0;
+        double RPM_to_TICKS = 1 / 60.0;
+
+        double DT_SPEED = 1.0;
+        double Strafing_Correction = 1.20;
 
         waitForStart();
 
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            aprilTagWebcam.update();
-            AprilTagDetection id23 = aprilTagWebcam.getTagBySpecificId(23); // TEST with PPG
+            // Gets the speed you wanna go at
+            boolean quarterSpeed = gamepad1.x;
+            boolean halfSpeed = gamepad1.a;
+            boolean threeSpeed = gamepad1.b;
+            boolean fullSpeed = gamepad1.y;
 
-            List<Double> idTagCoords = aprilTagWebcam.displayDetectionTelemetry(id23);
-
-            // Following or Directing
-            boolean Following = gamepad2.a;
-
-            if (Following) {
-                if (idTagCoords == null) {
-                    // Gets the speed you wanna go at
-                    boolean quarterSpeed = gamepad1.x;
-                    boolean halfSpeed = gamepad1.a;
-                    boolean threeSpeed = gamepad1.b;
-                    boolean fullSpeed = gamepad1.y;
-
-                    if (quarterSpeed){
-                        SPEED = 0.25;
-                    } else if (halfSpeed){
-                        SPEED = 0.50;
-                    } else if (threeSpeed){
-                        SPEED = 0.75;
-                    } else if (fullSpeed) {
-                        SPEED = 1.00;
-                    }
-
-                    double y = -gamepad1.left_stick_y * SPEED; // Remember, Y stick value is reversed
-                    double x = gamepad1.left_stick_x * 1.1 * SPEED; // Counteract imperfect strafing
-                    double rx = -gamepad1.right_stick_x * SPEED;
-                    double intakePow = -gamepad1.right_trigger;
-                    double rampPow = gamepad1.left_trigger;
-
-                    double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-                    double frontLeftPower = (y + x - rx) / denominator;
-                    double backLeftPower = (-y + x + rx) / denominator;
-                    double frontRightPower = (-y + x - rx) / denominator;
-                    double backRightPower = (y + x + rx) / denominator;
-
-                    frontLeftMotor.setPower(frontLeftPower);
-                    backLeftMotor.setPower(backLeftPower);
-                    frontRightMotor.setPower(frontRightPower);
-                    backRightMotor.setPower(backRightPower);
-                    //IntakeMotor.setPower(intakePow);
-                    RampMotor.setPower(rampPow);
-                }
-                else {
-                    boolean quarterSpeed = gamepad1.x;
-                    boolean halfSpeed = gamepad1.a;
-                    boolean threeSpeed = gamepad1.b;
-                    boolean fullSpeed = gamepad1.y;
-
-                    if (quarterSpeed){
-                        SPEED = 0.25;
-                    } else if (halfSpeed){
-                        SPEED = 0.50;
-                    } else if (threeSpeed){
-                        SPEED = 0.75;
-                    } else if (fullSpeed) {
-                        SPEED = 1.00;
-                    }
-
-                    double DAMP_FACTOR = 0.05;
-
-                    double y = aprilTagWebcam.displayDetectionTelemetry(id23).get(1) * SPEED * DAMP_FACTOR * 2;
-                    double x = -aprilTagWebcam.displayDetectionTelemetry(id23).get(0) * SPEED * DAMP_FACTOR;
-                    double rx = aprilTagWebcam.displayDetectionTelemetry(id23).get(2) * SPEED * DAMP_FACTOR;
-                    double intakePow = -gamepad1.right_trigger;
-                    double rampPow = gamepad1.left_trigger;
-
-                    double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-                    double frontLeftPower = (y + x - rx) / denominator;
-                    double backLeftPower = (-y + x + rx) / denominator;
-                    double frontRightPower = (-y + x - rx) / denominator;
-                    double backRightPower = (y + x + rx) / denominator;
-
-                    frontLeftMotor.setPower(frontLeftPower);
-                    backLeftMotor.setPower(backLeftPower);
-                    frontRightMotor.setPower(frontRightPower);
-                    backRightMotor.setPower(backRightPower);
-                    //IntakeMotor.setPower(intakePow);
-                    RampMotor.setPower(rampPow);
-                }
-            } else {
-                // Gets the speed you wanna go at
-                boolean quarterSpeed = gamepad1.x;
-                boolean halfSpeed = gamepad1.a;
-                boolean threeSpeed = gamepad1.b;
-                boolean fullSpeed = gamepad1.y;
-
-                if (quarterSpeed){
-                    SPEED = 0.25;
-                } else if (halfSpeed){
-                    SPEED = 0.50;
-                } else if (threeSpeed){
-                    SPEED = 0.75;
-                } else if (fullSpeed) {
-                    SPEED = 1.00;
-                }
-
-                double y = -gamepad1.left_stick_y * SPEED; // Remember, Y stick value is reversed
-                double x = gamepad1.left_stick_x * 1.1 * SPEED; // Counteract imperfect strafing
-                double rx = -gamepad1.right_stick_x * SPEED;
-                double intakePow = -gamepad1.right_trigger;
-                double rampPow = gamepad1.left_trigger;
-
-                double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-                double frontLeftPower = (y + x - rx) / denominator;
-                double backLeftPower = (-y + x + rx) / denominator;
-                double frontRightPower = (-y + x - rx) / denominator;
-                double backRightPower = (y + x + rx) / denominator;
-
-                frontLeftMotor.setPower(frontLeftPower);
-                backLeftMotor.setPower(backLeftPower);
-                frontRightMotor.setPower(frontRightPower);
-                backRightMotor.setPower(backRightPower);
-                //IntakeMotor.setPower(intakePow);
-                RampMotor.setPower(rampPow);
+            if (quarterSpeed) {
+                DT_SPEED = 0.25;
             }
+            if (halfSpeed) {
+                DT_SPEED = 0.50;
+            }
+            if (threeSpeed) {
+                DT_SPEED = 0.75;
+            }
+            if (fullSpeed) {
+                DT_SPEED = 1.00;
+            }
+
+            // Drivetrain Controller Controls
+            double y = -gamepad1.left_stick_y * DT_SPEED;
+            double x = gamepad1.left_stick_x * Strafing_Correction * DT_SPEED;
+            double rx = -gamepad1.right_stick_x * DT_SPEED;
+
+            // Mechanisms Controller Controls
+            double intakePow = -gamepad2.right_trigger;
+            double rampPow = gamepad2.left_trigger;
+
+            double expulsionPow = gamepad2.a ? 1.0 : 0.0;
+
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+            double frontLeftPower = (y + x - rx) / denominator;
+            double backLeftPower = (-y + x + rx) / denominator;
+            double frontRightPower = (-y + x - rx) / denominator;
+            double backRightPower = (y + x + rx) / denominator;
+
+            frontLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_TICKS * frontLeftPower);
+            backLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_TICKS * backLeftPower);
+            frontRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_TICKS * frontRightPower);
+            backRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_TICKS * backRightPower);
+            IntakeMotor.setVelocity(INTAKE_MOTOR_RPM * RPM_to_TICKS * intakePow);
+            RampMotor.setVelocity(RAMP_MOTOR_RPM * RPM_to_TICKS * rampPow);
+            leftExpulsionMotor.setVelocity(EXPULSION_MOTOR_RPM * RPM_to_TICKS * expulsionPow);
+            rightExpulsionMotor.setVelocity(EXPULSION_MOTOR_RPM * RPM_to_TICKS * expulsionPow);
         }
     }
 }
