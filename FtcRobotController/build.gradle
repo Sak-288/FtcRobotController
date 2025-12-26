@@ -6,6 +6,8 @@ import java.text.SimpleDateFormat
 apply plugin: 'com.android.library'
 
 android {
+    namespace = 'com.qualcomm.ftcrobotcontroller'
+    compileSdk 34
 
     defaultConfig {
         minSdkVersion 24
@@ -17,14 +19,12 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    compileSdk 34
-
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        // FTC currently recommends Java 17 for newer SDK versions (9.0+)
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
-    namespace = 'com.qualcomm.ftcrobotcontroller'
 }
 
 apply from: '../build.dependencies.gradle'

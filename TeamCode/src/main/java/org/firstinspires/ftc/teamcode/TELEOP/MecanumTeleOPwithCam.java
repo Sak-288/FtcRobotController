@@ -1,10 +1,9 @@
-package org.firstinspires.ftc.teamcode.PrePedro.normal_robot;
+package org.firstinspires.ftc.teamcode.TELEOP;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
-import org.firstinspires.ftc.teamcode.PrePedro.normal_robot.mecahnisms_outside.AprilTagWebcam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.util.List;

@@ -1,8 +1,10 @@
-package org.firstinspires.ftc.teamcode.PrePedro.normal_robot;
+package org.firstinspires.ftc.teamcode.TELEOP;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp
 public class MecanumTeleOP extends LinearOpMode {
@@ -14,7 +16,7 @@ public class MecanumTeleOP extends LinearOpMode {
         DcMotorEx frontRightMotor = hardwareMap.get(DcMotorEx.class, "FRM");
         DcMotorEx backRightMotor = hardwareMap.get(DcMotorEx.class, "BRM");
         DcMotorEx IntakeMotor = hardwareMap.get(DcMotorEx.class, "IM");
-        DcMotorEx RampMotor = hardwareMap.get(DcMotorEx.class, "RM");
+        // DcMotorEx RampMotor = hardwareMap.get(DcMotorEx.class, "RM");
         DcMotorEx leftExpulsionMotor = hardwareMap.get(DcMotorEx.class, "LEM");
         DcMotorEx rightExpulsionMotor = hardwareMap.get(DcMotorEx.class, "REM");
 
@@ -24,7 +26,7 @@ public class MecanumTeleOP extends LinearOpMode {
         frontRightMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         backRightMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         IntakeMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        RampMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        // RampMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         leftExpulsionMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         rightExpulsionMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
@@ -34,7 +36,7 @@ public class MecanumTeleOP extends LinearOpMode {
         frontRightMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         IntakeMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        RampMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        // RampMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         leftExpulsionMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         rightExpulsionMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
@@ -44,20 +46,26 @@ public class MecanumTeleOP extends LinearOpMode {
         frontRightMotor.setDirection(DcMotorEx.Direction.REVERSE); // Reverse the right ones, or the left ones, depending on robot orientation
         backRightMotor.setDirection(DcMotorEx.Direction.REVERSE);
         IntakeMotor.setDirection(DcMotorEx.Direction.FORWARD);
-        RampMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        // RampMotor.setDirection(DcMotorEx.Direction.FORWARD);
         leftExpulsionMotor.setDirection(DcMotorEx.Direction.FORWARD);
         rightExpulsionMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
         // CONSTANTS at initialization
-        double DT_MOTOR_RPM = 6000.0 / 20.0;
+        double BASE_TICKS_PER_REV_DC = 28;
+        double BASE_TICKS_PER_REV_CORE = 288;
+        double DT_MOTOR_RPM = 6000.0;
         double INTAKE_MOTOR_RPM = 125;
-        double RAMP_MOTOR_RPM = 6000.0 / 3.0;
-        double EXPULSION_MOTOR_RPM = 6000.0 / 3.0;
+        double RAMP_MOTOR_RPM = 6000.0;
+        double EXPULSION_MOTOR_RPM = 6000.0;
+        double DT_GEARBOX_RATIO = 4.0 * 5.0;
+        double INTAKE_GEARBOX_RATIO = 1.0;
+        double RAMP_MOTOR_GEARBOX_RATIO = 3.0;
+        double EXPULSION_MOTOR_GEARBOX_RATIO = 3.0;
 
-        double RPM_to_TICKS = 1 / 60.0;
+        double RPM_to_RPS = 1 / 60.0;
 
         double DT_SPEED = 1.0;
-        double Strafing_Correction = 1.20;
+        double Strafing_Correction = 1.12;
 
         waitForStart();
 
@@ -89,7 +97,7 @@ public class MecanumTeleOP extends LinearOpMode {
             double rx = -gamepad1.right_stick_x * DT_SPEED;
 
             // Mechanisms Controller Controls
-            double intakePow = -gamepad2.right_trigger;
+            double intakePow = gamepad2.right_trigger;
             double rampPow = gamepad2.left_trigger;
 
             double expulsionPow = gamepad2.a ? 1.0 : 0.0;
@@ -100,14 +108,14 @@ public class MecanumTeleOP extends LinearOpMode {
             double frontRightPower = (-y + x - rx) / denominator;
             double backRightPower = (y + x + rx) / denominator;
 
-            frontLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_TICKS * frontLeftPower);
-            backLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_TICKS * backLeftPower);
-            frontRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_TICKS * frontRightPower);
-            backRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_TICKS * backRightPower);
-            IntakeMotor.setVelocity(INTAKE_MOTOR_RPM * RPM_to_TICKS * intakePow);
-            RampMotor.setVelocity(RAMP_MOTOR_RPM * RPM_to_TICKS * rampPow);
-            leftExpulsionMotor.setVelocity(EXPULSION_MOTOR_RPM * RPM_to_TICKS * expulsionPow);
-            rightExpulsionMotor.setVelocity(EXPULSION_MOTOR_RPM * RPM_to_TICKS * expulsionPow);
+            frontLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * frontLeftPower);
+            backLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * backLeftPower);
+            frontRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * frontRightPower);
+            backRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO* backRightPower);
+            IntakeMotor.setVelocity(INTAKE_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_CORE * INTAKE_GEARBOX_RATIO * intakePow);
+            // RampMotor.setVelocity(RAMP_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * RAMP_MOTOR_GEARBOX_RATIO * rampPow);
+            leftExpulsionMotor.setVelocity(EXPULSION_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * expulsionPow);
+            rightExpulsionMotor.setVelocity(EXPULSION_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * expulsionPow);
         }
     }
 }
