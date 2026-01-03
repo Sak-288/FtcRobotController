@@ -53,19 +53,21 @@ public class MecanumTeleOP extends LinearOpMode {
         // CONSTANTS at initialization
         double BASE_TICKS_PER_REV_DC = 28;
         double BASE_TICKS_PER_REV_CORE = 288;
+
         double DT_MOTOR_RPM = 6000.0;
-        double INTAKE_MOTOR_RPM = 125;
+        double INTAKE_MOTOR_RPM = 6000.0;
         double RAMP_MOTOR_RPM = 6000.0;
         double EXPULSION_MOTOR_RPM = 6000.0;
+
         double DT_GEARBOX_RATIO = 4.0 * 5.0;
         double INTAKE_GEARBOX_RATIO = 1.0;
-        double RAMP_MOTOR_GEARBOX_RATIO = 3.0;
-        double EXPULSION_MOTOR_GEARBOX_RATIO = 3.0;
+        double RAMP_MOTOR_GEARBOX_RATIO = 1.0;
+        double EXPULSION_MOTOR_GEARBOX_RATIO = 1.0;
 
         double RPM_to_RPS = 1 / 60.0;
 
         double DT_SPEED = 1.0;
-        double Strafing_Correction = 1.12;
+        double Strafing_Correction = 1.1;
 
         waitForStart();
 
@@ -73,46 +75,44 @@ public class MecanumTeleOP extends LinearOpMode {
 
         while (opModeIsActive()) {
             // Gets the speed you wanna go at
-            boolean quarterSpeed = gamepad1.x;
-            boolean halfSpeed = gamepad1.a;
-            boolean threeSpeed = gamepad1.b;
-            boolean fullSpeed = gamepad1.y;
-
-            if (quarterSpeed) {
+            if (gamepad1.x) {
                 DT_SPEED = 0.25;
             }
-            if (halfSpeed) {
+            if (gamepad1.a) {
                 DT_SPEED = 0.50;
             }
-            if (threeSpeed) {
+            if (gamepad1.b) {
                 DT_SPEED = 0.75;
             }
-            if (fullSpeed) {
+            if (gamepad1.y) {
                 DT_SPEED = 1.00;
             }
 
             // Drivetrain Controller Controls
-            double y = -gamepad1.left_stick_y * DT_SPEED;
-            double x = gamepad1.left_stick_x * Strafing_Correction * DT_SPEED;
-            double rx = -gamepad1.right_stick_x * DT_SPEED;
+            double y = -gamepad1.left_stick_y;
+            double x = gamepad1.left_stick_x * Strafing_Correction;
+            double rx = -gamepad1.right_stick_x;
 
             // Mechanisms Controller Controls
             double intakePow = gamepad2.right_trigger;
             double rampPow = gamepad2.left_trigger;
 
-            double expulsionPow = gamepad2.a ? 1.0 : 0.0;
+            double expulsionPow = gamepad2.a ? -1.0 : 0.0;
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double frontLeftPower = (y + x - rx) / denominator;
-            double backLeftPower = (-y + x + rx) / denominator;
-            double frontRightPower = (-y + x - rx) / denominator;
-            double backRightPower = (y + x + rx) / denominator;
+            double frontLeftPower = ((y + x - rx) / denominator);
+            double backLeftPower = ((-y + x + rx) / denominator);
+            double frontRightPower = ((-y + x - rx) / denominator);
+            double backRightPower = ((y + x + rx) / denominator);
 
-            frontLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * frontLeftPower);
-            backLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * backLeftPower);
-            frontRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * frontRightPower);
-            backRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO* backRightPower);
-            IntakeMotor.setVelocity(INTAKE_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_CORE * INTAKE_GEARBOX_RATIO * intakePow);
+            // DRIVETRAIN MOTORS
+            frontLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * frontLeftPower * DT_SPEED);
+            backLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * backLeftPower * DT_SPEED);
+            frontRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * frontRightPower * DT_SPEED);
+            backRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO* backRightPower * DT_SPEED);
+
+            // MECHANISM MOTORS
+            IntakeMotor.setVelocity(INTAKE_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * INTAKE_GEARBOX_RATIO * intakePow);
             // RampMotor.setVelocity(RAMP_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * RAMP_MOTOR_GEARBOX_RATIO * rampPow);
             leftExpulsionMotor.setVelocity(EXPULSION_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * expulsionPow);
             rightExpulsionMotor.setVelocity(EXPULSION_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * expulsionPow);
