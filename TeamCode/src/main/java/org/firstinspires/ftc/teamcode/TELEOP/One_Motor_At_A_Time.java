@@ -27,8 +27,8 @@ public class One_Motor_At_A_Time extends LinearOpMode {
         rightExpulsionMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         leftExpulsionMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        rightExpulsionMotor.setDirection(DcMotorEx.Direction.REVERSE);
-        leftExpulsionMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        rightExpulsionMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        leftExpulsionMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
         // CONSTANTS at initialization
         double BASE_TICKS_PER_REV_DC = 28;
@@ -39,29 +39,39 @@ public class One_Motor_At_A_Time extends LinearOpMode {
 
         double wantedRPM = 3000.0;
 
+        boolean lastA = false;
+        boolean lastB = false;
+        boolean lastX = false;
+        boolean lastY = false;
+
         waitForStart();
 
         if (isStopRequested()) return;
 
         while (opModeIsActive()){
-            if(gamepad1.a){
+            if(gamepad1.a && !lastA){
                 wantedRPM += 100;
             }
-            if(gamepad1.b){
+            if(gamepad1.b && !lastB){
                 wantedRPM -=100;
             }
-            if(gamepad1.x){
+            if(gamepad1.x && !lastX){
                 wantedRPM += 10;
             }
-            if(gamepad1.y){
+            if(gamepad1.y && !lastY){
                 wantedRPM -= 10;
             }
+
+            lastA = gamepad1.a;
+            lastB = gamepad1.b;
+            lastX = gamepad1.x;
+            lastY = gamepad1.y;
 
             telemetry.addLine(String.format("Expulsion RPM : " + wantedRPM));
             telemetry.update();
 
-            rightExpulsionMotor.setVelocity(wantedRPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * -1);
-            leftExpulsionMotor.setVelocity(wantedRPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * -1);
+            rightExpulsionMotor.setVelocity(wantedRPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * 1);
+            leftExpulsionMotor.setVelocity(wantedRPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * 1);
         }
     }
 }
