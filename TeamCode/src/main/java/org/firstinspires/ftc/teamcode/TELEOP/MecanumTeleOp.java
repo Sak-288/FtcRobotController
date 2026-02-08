@@ -1,13 +1,14 @@
-﻿package org.firstinspires.ftc.teamcode.TELEOP;
+package org.firstinspires.ftc.teamcode.TELEOP;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 @TeleOp
-public class MecanumTeleOP extends LinearOpMode {
+public class MecanumTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         // Declare our motors
@@ -43,7 +44,7 @@ public class MecanumTeleOP extends LinearOpMode {
         // Setting motor directions
         frontLeftMotor.setDirection(DcMotorEx.Direction.FORWARD);
         backLeftMotor.setDirection(DcMotorEx.Direction.FORWARD);
-        frontRightMotor.setDirection(DcMotorEx.Direction.REVERSE); // Reverse the right ones, or the left ones, depending on robot orientation
+        frontRightMotor.setDirection(DcMotorEx.Direction.REVERSE);
         backRightMotor.setDirection(DcMotorEx.Direction.REVERSE);
         IntakeMotor.setDirection(DcMotorEx.Direction.FORWARD);
         RampMotor.setDirection(DcMotorEx.Direction.FORWARD);
@@ -54,15 +55,15 @@ public class MecanumTeleOP extends LinearOpMode {
         double BASE_TICKS_PER_REV_DC = 28;
         double BASE_TICKS_PER_REV_CORE = 288;
 
-        double DT_MOTOR_RPM = 6000.0;
-        double INTAKE_MOTOR_RPM = 6000.0;
-        double RAMP_MOTOR_RPM = 6000.0;
-        double EXPULSION_MOTOR_RPM = 6000.0;
-
         double DT_GEARBOX_RATIO = 4.0 * 5.0;
         double INTAKE_GEARBOX_RATIO = 1.0;
         double RAMP_MOTOR_GEARBOX_RATIO = 1.0;
         double EXPULSION_MOTOR_GEARBOX_RATIO = 1.0;
+
+        double DT_MOTOR_TARGET_RPM = 6000.0 / DT_GEARBOX_RATIO;
+        double INTAKE_MOTOR_TARGET_RPM = 125.0 / INTAKE_GEARBOX_RATIO;
+        double RAMP_MOTOR_TARGET_RPM = 6000.0 / RAMP_MOTOR_GEARBOX_RATIO;
+        double EXPULSION_MOTOR_TARGET_RPM = 6000.0 / EXPULSION_MOTOR_GEARBOX_RATIO;
 
         double RPM_to_RPS = 1 / 60.0;
 
@@ -70,7 +71,7 @@ public class MecanumTeleOP extends LinearOpMode {
         double Strafing_Correction = 1.1;
 
         // This is to change expulsion motors speed
-        double jjk_modulo = 0; // You'll change this eventually
+        double jjk_modulo = 0;
         double modulation = 0.5;
         boolean lastA = false;
 
@@ -79,7 +80,7 @@ public class MecanumTeleOP extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            // Gets the speed you wanna go at
+            /* Gets the speed you wanna go at
             if (gamepad1.x) {
                 DT_SPEED = 0.25;
             }
@@ -91,9 +92,9 @@ public class MecanumTeleOP extends LinearOpMode {
             }
             if (gamepad1.y) {
                 DT_SPEED = 1.00;
-            }
+            }*/
 
-            // Drivetrain Controller Controls
+            /* Drivetrain Controller Controls
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x * Strafing_Correction;
             double rx = -gamepad1.right_stick_x;
@@ -102,39 +103,36 @@ public class MecanumTeleOP extends LinearOpMode {
             double frontLeftPower = ((y + x - rx) / denominator);
             double backLeftPower = ((-y + x + rx) / denominator);
             double frontRightPower = ((-y + x - rx) / denominator);
-            double backRightPower = ((y + x + rx) / denominator);
+            double backRightPower = ((y + x + rx) / denominator);*/
+
 
             // Mechanisms Controller Controls
-            double intakePow = gamepad2.y ? 1.0 : 0.0;
-            if (gamepad2.a && !lastA) {
+            double intakePow = gamepad1.y ? -1.0 : 0.0;
+            if (gamepad1.a && !lastA) {
                 jjk_modulo += 1;
                 if (jjk_modulo % 2 == 0) {
-                    modulation = 0.5;
+                    modulation = -0.5;
                 } else {
-                    modulation = 1.0;
+                    modulation = -1.0;
                 }
             }
-            if (jjk_modulo % 2 == 0) {
 
-            }
-            double expulsionPow = gamepad2.x ? modulation * 1.0 : 0.0;
-            double rampPow = gamepad2.a ? 1.0 : 0.0;
+            double expulsionPow = gamepad1.x ? modulation : 0.0;
+            double rampPow = gamepad1.a ? 1.0 : 0.0;
 
-            // Ugly expulsion motor speed modulation for now, if it works (hopefully), it works.
-            lastA = gamepad2.a;
+            lastA = gamepad1.a;
 
-            // DRIVETRAIN MOTORS
+            /* DRIVETRAIN MOTORS
             frontLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * frontLeftPower * DT_SPEED);
             backLeftMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * backLeftPower * DT_SPEED);
             frontRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * frontRightPower * DT_SPEED);
-            backRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO* backRightPower * DT_SPEED);
+            backRightMotor.setVelocity(DT_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO* backRightPower * DT_SPEED);*/
 
             // MECHANISM MOTORS
-            IntakeMotor.setVelocity(INTAKE_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_CORE * INTAKE_GEARBOX_RATIO * intakePow);
-            RampMotor.setVelocity(RAMP_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * RAMP_MOTOR_GEARBOX_RATIO * rampPow);
-            leftExpulsionMotor.setVelocity(EXPULSION_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * expulsionPow);
-            rightExpulsionMotor.setVelocity(EXPULSION_MOTOR_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * expulsionPow);
+            IntakeMotor.setVelocity(INTAKE_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_CORE * INTAKE_GEARBOX_RATIO * intakePow);
+            RampMotor.setVelocity(RAMP_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * RAMP_MOTOR_GEARBOX_RATIO * rampPow);
+            leftExpulsionMotor.setVelocity(EXPULSION_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * expulsionPow);
+            rightExpulsionMotor.setVelocity(EXPULSION_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * expulsionPow);
         }
     }
 }
-
