@@ -11,22 +11,22 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @Autonomous(name = "Bottom Blue Auto - Final", group = "Autonomous")
-public class BottomBlueAuto extends OpMode {
+public class BottomRedAuto extends OpMode {
 
     public Follower follower;
     public Timer pathTimer, opModeTimer;
     private String pathState;
 
     // ----- POSES -----
-    private final Pose startPose = new Pose(56, 8, Math.toRadians(90));
-    private final Pose scorePose = new Pose(56, 108, Math.toRadians(135));
-    private final Pose firstLineStart = new Pose(42, 84, Math.toRadians(180));
-    private final Pose firstLineEnd = new Pose(16, 84, Math.toRadians(180));
-    private final Pose secondLineStart = new Pose(42, 60, Math.toRadians(180));
-    private final Pose secondLineEnd = new Pose(16, 60, Math.toRadians(180));
-    private final Pose thirdLineStart = new Pose(42, 36, Math.toRadians(180));
-    private final Pose thirdLineEnd = new Pose(16, 36, Math.toRadians(180));
-    private final Pose parkPose = new Pose(105, 34, Math.toRadians(90));
+    private final Pose startPose = new Pose(88, 8, Math.toRadians(90));
+    private final Pose scorePose = new Pose(88, 108, Math.toRadians(45));
+    private final Pose firstLineStart = new Pose(102, 84, Math.toRadians(0));
+    private final Pose firstLineEnd = new Pose(128, 84, Math.toRadians(0));
+    private final Pose secondLineStart = new Pose(102, 60, Math.toRadians(0));
+    private final Pose secondLineEnd = new Pose(128, 60, Math.toRadians(0));
+    private final Pose thirdLineStart = new Pose(102, 36, Math.toRadians(0));
+    private final Pose thirdLineEnd = new Pose(128, 36, Math.toRadians(0));
+    private final Pose parkPose = new Pose(39, 34, Math.toRadians(90));
 
     // Path Chains
     private PathChain shootFirst, pickUpFirst, shootSecond, pickUpSecond, shootThird, goHome;
