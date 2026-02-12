@@ -133,6 +133,18 @@ public class MecanumTeleOp extends LinearOpMode {
             RampMotor.setVelocity(RAMP_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * RAMP_MOTOR_GEARBOX_RATIO * rampPow);
             leftExpulsionMotor.setVelocity(EXPULSION_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * expulsionPow);
             rightExpulsionMotor.setVelocity(EXPULSION_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * EXPULSION_MOTOR_GEARBOX_RATIO * expulsionPow);
+
+            // USELESS TELEMETRY
+            if((Math.abs(frontLeftPower) + Math.abs(backLeftPower) + Math.abs(frontRightPower) + Math.abs(backRightPower)) > 0.0){
+                telemetry.addLine("Robot is MOVING");
+            }
+            if(intakePow != 0.0){
+                telemetry.addLine("Intake is INTAKING");
+            }
+            if(rampPow != 0.0 || expulsionPow != 0.0){
+                telemetry.addLine("Outtake is OUTTAKING");
+            }
+            telemetry.update();
         }
     }
 }
