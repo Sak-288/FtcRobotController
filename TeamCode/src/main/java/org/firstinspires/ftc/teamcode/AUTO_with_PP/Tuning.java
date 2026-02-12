@@ -206,11 +206,18 @@ class ForwardTuner extends OpMode {
     public void loop() {
         follower.update();
 
-        telemetryM.debug("Distance Moved: " + (follower.getPose().getX() - 72));
-        telemetryM.debug("The multiplier will display what your forward ticks to inches should be to scale your current distance to " + DISTANCE + " inches.");
-        telemetryM.debug("Multiplier: " + (DISTANCE / ((follower.getPose().getX() - 72) / follower.getPoseTracker().getLocalizer().getForwardMultiplier())));
-        telemetryM.update(telemetry);
+        // Check if the localizer is actually there before calling methods on it
+        if (follower.getPoseTracker() != null && follower.getPoseTracker().getLocalizer() != null) {
+            double currentX = follower.getPose().getX();
+            double multiplier = follower.getPoseTracker().getLocalizer().getForwardMultiplier();
 
+            telemetryM.debug("Distance Moved: " + (currentX - 72));
+            telemetryM.debug("Multiplier: " + (DISTANCE / ((currentX - 72) / multiplier)));
+        } else {
+            telemetryM.debug("Status: Initializing Localizer...");
+        }
+
+        telemetryM.update(telemetry);
         draw();
     }
 }

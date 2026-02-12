@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(10); // TBD
+            .mass(9.0);
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
@@ -20,25 +20,29 @@ public class Constants {
             .maxPower(1.0)
             .rightFrontMotorName("FRM")
             .rightRearMotorName("BRM")
-            .leftRearMotorName("LRM")
-            .leftFrontMotorName("LFM")
+            .leftRearMotorName("BLM")
+            .leftFrontMotorName("FLM")
+            // Motor directions accounting for the 180-degree flip of the rear motors
             .leftFrontMotorDirection(DcMotorEx.Direction.FORWARD)
-            .leftRearMotorDirection(DcMotorEx.Direction.FORWARD)
+            .leftRearMotorDirection(DcMotorEx.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorEx.Direction.REVERSE)
-            .rightRearMotorDirection(DcMotorEx.Direction.REVERSE);
+            .rightRearMotorDirection(DcMotorEx.Direction.FORWARD);
 
     public static DriveEncoderConstants localizerConstants = new DriveEncoderConstants()
             .rightFrontMotorName("FRM")
             .rightRearMotorName("BRM")
-            .leftRearMotorName("LRM")
-            .leftFrontMotorName("LFM")
-            .leftFrontEncoderDirection(Encoder.FORWARD)
+            .leftRearMotorName("BLM")
+            .leftFrontMotorName("FLM")
+            // NEW ENCODER PATTERN: This 'X-Pattern' prevents lateral movement from canceling out
+            .leftFrontEncoderDirection(Encoder.REVERSE)
             .leftRearEncoderDirection(Encoder.FORWARD)
-            .rightFrontEncoderDirection(Encoder.REVERSE)
-            .rightRearEncoderDirection(Encoder.FORWARD)
-            .robotLength(10) // TBD
-            .robotWidth(10); // TBD
-
+            .rightFrontEncoderDirection(Encoder.FORWARD)
+            .rightRearEncoderDirection(Encoder.REVERSE)
+            .robotLength(13.25)
+            .robotWidth(15.75)
+            .forwardTicksToInches(7.60)
+            .strafeTicksToInches(-0.13)
+            .turnTicksToInches(0.23);
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
@@ -48,4 +52,3 @@ public class Constants {
                 .build();
     }
 }
-

@@ -38,8 +38,8 @@ public class MecanumTeleOp extends LinearOpMode {
         backRightMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         IntakeMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         RampMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        leftExpulsionMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        rightExpulsionMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        leftExpulsionMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        rightExpulsionMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
         // Setting motor directions
         frontLeftMotor.setDirection(DcMotorEx.Direction.FORWARD);
@@ -72,7 +72,7 @@ public class MecanumTeleOp extends LinearOpMode {
 
         // This is to change expulsion motors speed
         double jjk_modulo = 0;
-        double modulation = 0.5;
+        double modulation = -0.5;
         boolean lastA = false;
 
         waitForStart();
@@ -117,10 +117,10 @@ public class MecanumTeleOp extends LinearOpMode {
                 }
             }
 
-            double expulsionPow = gamepad2.x ? modulation : 0.0;
+            double expulsionPow = gamepad2.x ? modulation : -0.25; // -0.25 means and IDLE SPEED of 1500 RPM.
             double rampPow = gamepad2.b ? 1.0 : 0.0;
 
-            lastA = gamepad1.a;
+            lastA = gamepad2.a;
 
             // DRIVETRAIN MOTORS
             frontLeftMotor.setVelocity(DT_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * frontLeftPower * DT_SPEED);
@@ -141,7 +141,7 @@ public class MecanumTeleOp extends LinearOpMode {
             if(intakePow != 0.0){
                 telemetry.addLine("Intake is INTAKING");
             }
-            if(rampPow != 0.0 || expulsionPow != 0.0){
+            if(rampPow != 0.0 || expulsionPow < -0.25){
                 telemetry.addLine("Outtake is OUTTAKING");
             }
             telemetry.update();

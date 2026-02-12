@@ -41,6 +41,7 @@ public class BottomBlueAuto extends OpMode {
 
     private double nearShootingRPM = 3000.0;
     private double intakingRPM = 125.0;
+    private double baseShootingRPM = 1500.0; // This is heavily experimental.
 
     double SHOOTING_TIME = 3.0; // Reverted as requested
     private double INTAKING_TIME = 0.8;
@@ -108,6 +109,7 @@ public class BottomBlueAuto extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case "START":
+                setShooterPower(baseShootingRPM);
                 follower.followPath(shootFirst, true);
                 setPathState("DRIVE_TO_SCORE_1");
                 break;
@@ -121,7 +123,7 @@ public class BottomBlueAuto extends OpMode {
             case "SHOOT_1":
                 setShooterPower(nearShootingRPM);
                 if (pathTimer.getElapsedTimeSeconds() > SHOOTING_TIME) {
-                    setShooterPower(0);
+                    setShooterPower(baseShootingRPM);
                     follower.followPath(pickUpFirst, true);
                     setPathState("DRIVE_TO_PICKUP_1");
                 }
@@ -151,7 +153,7 @@ public class BottomBlueAuto extends OpMode {
             case "SHOOT_2":
                 setShooterPower(nearShootingRPM);
                 if (pathTimer.getElapsedTimeSeconds() > SHOOTING_TIME) {
-                    setShooterPower(0);
+                    setShooterPower(baseShootingRPM);
                     follower.followPath(pickUpSecond, true);
                     setPathState("DRIVE_TO_PICKUP_2");
                 }
@@ -181,7 +183,7 @@ public class BottomBlueAuto extends OpMode {
             case "SHOOT_3":
                 setShooterPower(nearShootingRPM);
                 if (pathTimer.getElapsedTimeSeconds() > SHOOTING_TIME) {
-                    setShooterPower(0);
+                    setShooterPower(baseShootingRPM);
                     follower.followPath(goHome, true);
                     setPathState("DRIVE_TO_PARK");
                 }
@@ -213,19 +215,25 @@ public class BottomBlueAuto extends OpMode {
         leftExpulsionMotor = hardwareMap.get(DcMotorEx.class, "LEM");
         rightExpulsionMotor = hardwareMap.get(DcMotorEx.class, "REM");
 
-        configureMotor(IntakeMotor, DcMotorEx.Direction.FORWARD);
-        configureMotor(RampMotor, DcMotorEx.Direction.FORWARD);
-        configureMotor(leftExpulsionMotor, DcMotorEx.Direction.FORWARD);
-        configureMotor(rightExpulsionMotor, DcMotorEx.Direction.REVERSE);
+        configureMotorBrake(IntakeMotor, DcMotorEx.Direction.FORWARD);
+        configureMotorBrake(RampMotor, DcMotorEx.Direction.FORWARD);
+        configureMotorFloat(leftExpulsionMotor, DcMotorEx.Direction.FORWARD);
+        configureMotorFloat(rightExpulsionMotor, DcMotorEx.Direction.REVERSE);
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
         buildPaths();
     }
 
-    private void configureMotor(DcMotorEx motor, DcMotorEx.Direction dir) {
+    private void configureMotorBrake(DcMotorEx motor, DcMotorEx.Direction dir) {
         motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        motor.setDirection(dir);
+    }
+
+    private void configureMotorFloat(DcMotorEx motor, DcMotorEx.Direction dir) {
+        motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
         motor.setDirection(dir);
     }
 
