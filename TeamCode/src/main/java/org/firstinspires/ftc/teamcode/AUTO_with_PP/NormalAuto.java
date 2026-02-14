@@ -10,15 +10,15 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class NormalAuto extends LinearOpMode {
 
     // --- HARDWARE DECLARATIONS (Made Global) ---
-    private DcMotorEx frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor;
-    private DcMotorEx IntakeMotor, RampMotor, leftExpulsionMotor, rightExpulsionMotor;
+    private DcMotorEx frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor, leftExpulsionMotor, rightExpulsionMotor;
+    private DcMotorEx IntakeMotor, RampMotor;
     private final ElapsedTime runtime = new ElapsedTime();
 
     // --- CONSTANTS ---
     static final double TICKS_PER_REV = 560.0;
     static final double WHEEL_DIAMETER_INCHES = 2.96;
     static final double TICKS_PER_INCH = TICKS_PER_REV / (WHEEL_DIAMETER_INCHES * Math.PI);
-    static final double STRAFE_CORRECTION = 1.15;
+    static final double STRAFE_CORRECTION = 1.05;
     static final double TRACK_WIDTH_INCHES = 15.75;
 
     @Override
@@ -36,8 +36,8 @@ public class NormalAuto extends LinearOpMode {
 
         // 2. SET DIRECTIONS
         frontLeftMotor.setDirection(DcMotorEx.Direction.FORWARD);
-        backLeftMotor.setDirection(DcMotorEx.Direction.FORWARD);
-        frontRightMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        backLeftMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        frontRightMotor.setDirection(DcMotorEx.Direction.FORWARD);
         backRightMotor.setDirection(DcMotorEx.Direction.REVERSE);
         IntakeMotor.setDirection(DcMotorEx.Direction.FORWARD);
         RampMotor.setDirection(DcMotorEx.Direction.FORWARD);
@@ -65,10 +65,24 @@ public class NormalAuto extends LinearOpMode {
         // THE MAIN SCRIPT
         double DT_SPEED = 0.80;
 
-        drive(24, 0, 0, DT_SPEED);
+        drive(24.0 * 2.0, 0, 0, DT_SPEED);
+        drive(0.0, 24.0 * -1, 0, DT_SPEED);
+        double turnTicks = -45.0 / 360.0 * Math.PI * TRACK_WIDTH_INCHES;
+        drive(0.0, 0.0, turnTicks, DT_SPEED);
+        outtake(3.0);
+        turnTicks = 135.0 / 360.0 * Math.PI * TRACK_WIDTH_INCHES;
+        drive(0, 24.0 * -1, turnTicks, DT_SPEED);
+        drive(24.0, 0.0, 0.0, DT_SPEED);
+        turnTicks = 90.0 / 360.0 * Math.PI * TRACK_WIDTH_INCHES;
+        drive(0.0, 0.0, turnTicks, DT_SPEED);
         start_intake();
-        drive(0, 24, 0, DT_SPEED);
+        drive(24.0, 0.0, 0.0, DT_SPEED);
         end_intake();
+        drive(24.0 * -1, 0.0, 0.0, DT_SPEED);
+        drive(0.0, 0.0, turnTicks, DT_SPEED);
+        drive(24.0, 0.0, 0.0, DT_SPEED);
+        turnTicks = -45.0 / 360.0 * Math.PI * TRACK_WIDTH_INCHES;
+        drive(0.0, 0.0, turnTicks, DT_SPEED);
         outtake(3.0);
 
         telemetry.addData("Status", "AUTO Complete");
@@ -80,10 +94,11 @@ public class NormalAuto extends LinearOpMode {
     private void drive(double axial, double lateral, double turn, double power) {
         double adjLateral = lateral * STRAFE_CORRECTION;
 
-        int flT = frontLeftMotor.getCurrentPosition() + (int)((axial + adjLateral + turn) * TICKS_PER_INCH);
-        int blT = backLeftMotor.getCurrentPosition() + (int)((axial - adjLateral + turn) * TICKS_PER_INCH);
-        int frT = frontRightMotor.getCurrentPosition() + (int)((axial - adjLateral - turn) * TICKS_PER_INCH);
-        int brT = backRightMotor.getCurrentPosition() + (int)((axial + adjLateral - turn) * TICKS_PER_INCH);
+        // SWAPPED KINEMATICS
+        int flT = frontLeftMotor.getCurrentPosition() + (int)((-axial - adjLateral + turn) * TICKS_PER_INCH);
+        int blT = backLeftMotor.getCurrentPosition() + (int)((-axial + adjLateral + turn) * TICKS_PER_INCH);
+        int frT = frontRightMotor.getCurrentPosition() + (int)((axial + adjLateral - turn) * TICKS_PER_INCH);
+        int brT = backRightMotor.getCurrentPosition() + (int)((axial - adjLateral - turn) * TICKS_PER_INCH);
 
         frontLeftMotor.setTargetPosition(flT);
         backLeftMotor.setTargetPosition(blT);
