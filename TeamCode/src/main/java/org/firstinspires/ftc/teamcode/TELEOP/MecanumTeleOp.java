@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp
 public class MecanumTeleOp extends LinearOpMode {
@@ -20,6 +21,7 @@ public class MecanumTeleOp extends LinearOpMode {
         DcMotorEx RampMotor = hardwareMap.get(DcMotorEx.class, "RM");
         DcMotorEx leftExpulsionMotor = hardwareMap.get(DcMotorEx.class, "LEM");
         DcMotorEx rightExpulsionMotor = hardwareMap.get(DcMotorEx.class, "REM");
+        Servo myServo = hardwareMap.get(Servo.class, "OuttakeServo");
 
         // Set the mode
         frontLeftMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
@@ -44,8 +46,8 @@ public class MecanumTeleOp extends LinearOpMode {
         // Setting motor directions
         frontLeftMotor.setDirection(DcMotorEx.Direction.FORWARD);
         backLeftMotor.setDirection(DcMotorEx.Direction.REVERSE);
-        frontRightMotor.setDirection(DcMotorEx.Direction.FORWARD);
-        backRightMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        frontRightMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        backRightMotor.setDirection(DcMotorEx.Direction.FORWARD);
         IntakeMotor.setDirection(DcMotorEx.Direction.FORWARD);
         RampMotor.setDirection(DcMotorEx.Direction.FORWARD);
         leftExpulsionMotor.setDirection(DcMotorEx.Direction.FORWARD);
@@ -67,12 +69,15 @@ public class MecanumTeleOp extends LinearOpMode {
 
         double RPM_to_RPS = 1 / 60.0;
 
-        double DT_SPEED = 1.0;
+        double DT_SPEED = 0.50;
         double Strafing_Correction = 1.1;
+
+        double SERVO_HOME = 90.0 / 270.0;
+        double SERVO_MAX = 200.0 / 270.0;
 
         // This is to change expulsion motors speed
         double jjk_modulo = 0;
-        double modulation = -0.45;
+        double modulation = 0.00;
         boolean lastA = false;
 
         waitForStart();
@@ -97,36 +102,42 @@ public class MecanumTeleOp extends LinearOpMode {
             // Drivetrain Controller Controls
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x * Strafing_Correction;
-            double rx = -gamepad1.right_stick_x;
+            double rx = gamepad1.right_stick_x;
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double frontLeftPower = ((y + x - rx) / denominator);
-            double backLeftPower = ((-y + x + rx) / denominator);
-            double frontRightPower = ((-y + x - rx) / denominator);
-            double backRightPower = ((y + x + rx) / denominator);
-
+            double frontLeftPower = ((y - x + rx) / denominator);
+            double backLeftPower = ((y + x + rx) / denominator);
+            double frontRightPower = ((-y - x + rx) / denominator);
+            double backRightPower = ((-y + x + rx) / denominator);
 
             // Mechanisms Controller Controls
             double intakePow = gamepad2.y ? -1.0 : 0.0;
             if (gamepad2.a && !lastA) {
                 jjk_modulo += 1;
                 if (jjk_modulo % 2 == 0) {
-                    modulation = -0.5;
+                    modulation = -0.40;
                 } else {
                     modulation = -1.0;
                 }
             }
 
-            double expulsionPow = gamepad2.x ? modulation : -0.20; // -0.25 means and IDLE SPEED of 1500 RPM.
+            double expulsionPow = gamepad2.x ? modulation : 0.00;
             double rampPow = gamepad2.b ? 1.0 : 0.0;
 
             lastA = gamepad2.a;
+            double servoPos;
+            if (gamepad2.left_bumper) {
+                servoPos = SERVO_MAX;
+            } else {
+                servoPos = SERVO_HOME;
+            }
 
             // DRIVETRAIN MOTORS
             frontLeftMotor.setVelocity(DT_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * frontLeftPower * DT_SPEED);
             backLeftMotor.setVelocity(DT_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * backLeftPower * DT_SPEED);
             frontRightMotor.setVelocity(DT_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO * frontRightPower * DT_SPEED);
             backRightMotor.setVelocity(DT_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_DC * DT_GEARBOX_RATIO* backRightPower * DT_SPEED);
+            myServo.setPosition(servoPos);
 
             // MECHANISM MOTORS
             IntakeMotor.setVelocity(INTAKE_MOTOR_TARGET_RPM * RPM_to_RPS * BASE_TICKS_PER_REV_CORE * INTAKE_GEARBOX_RATIO * intakePow);

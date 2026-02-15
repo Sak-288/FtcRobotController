@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Autonomous(name = "BottomBlueAuto", group = "Test")
@@ -12,13 +13,15 @@ public class NormalAuto extends LinearOpMode {
     // --- HARDWARE DECLARATIONS (Made Global) ---
     private DcMotorEx frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor, leftExpulsionMotor, rightExpulsionMotor;
     private DcMotorEx IntakeMotor, RampMotor;
+    private Servo myServo;
     private final ElapsedTime runtime = new ElapsedTime();
 
     // --- CONSTANTS ---
     static final double TICKS_PER_REV = 560.0;
     static final double WHEEL_DIAMETER_INCHES = 2.96;
-    static final double TICKS_PER_INCH = TICKS_PER_REV / (WHEEL_DIAMETER_INCHES * Math.PI);
-    static final double STRAFE_CORRECTION = 1.05;
+    static final double TICKS_PER_INCH = TICKS_PER_REV / (WHEEL_DIAMETER_INCHES * Math.PI) * 48/53;
+    static final double STRAFE_CORRECTION = 1.00;
+    static final double TURN_CORRECTION = 1.30;
     static final double TRACK_WIDTH_INCHES = 15.75;
 
     @Override
@@ -33,14 +36,15 @@ public class NormalAuto extends LinearOpMode {
         RampMotor = hardwareMap.get(DcMotorEx.class, "RM");
         leftExpulsionMotor = hardwareMap.get(DcMotorEx.class, "LEM");
         rightExpulsionMotor = hardwareMap.get(DcMotorEx.class, "REM");
+        myServo = hardwareMap.get(Servo.class, "OuttakeServo");
 
         // 2. SET DIRECTIONS
         frontLeftMotor.setDirection(DcMotorEx.Direction.FORWARD);
         backLeftMotor.setDirection(DcMotorEx.Direction.REVERSE);
-        frontRightMotor.setDirection(DcMotorEx.Direction.FORWARD);
-        backRightMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        frontRightMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        backRightMotor.setDirection(DcMotorEx.Direction.FORWARD);
         IntakeMotor.setDirection(DcMotorEx.Direction.FORWARD);
-        RampMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        RampMotor.setDirection(DcMotorEx.Direction.REVERSE);
         leftExpulsionMotor.setDirection(DcMotorEx.Direction.FORWARD);
         rightExpulsionMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
@@ -62,28 +66,21 @@ public class NormalAuto extends LinearOpMode {
         waitForStart();
         if (isStopRequested()) return;
 
-        // THE MAIN SCRIPT
+        // THE MAIN SCRIPTw
         double DT_SPEED = 0.80;
 
-        drive(24.0 * 2.0, 0, 0, DT_SPEED);
-        drive(0.0, 24.0 * -1, 0, DT_SPEED);
-        double turnTicks = -45.0 / 360.0 * Math.PI * TRACK_WIDTH_INCHES;
-        drive(0.0, 0.0, turnTicks, DT_SPEED);
+        drive(24.0 * 3.2, 0, 0, DT_SPEED);
+        double turnTicks = 135.0 / 360.0 * Math.PI * TRACK_WIDTH_INCHES;
+        drive(0.0, 0.0, turnTicks, DT_SPEED / 2.0);
         outtake(3.0);
-        turnTicks = 135.0 / 360.0 * Math.PI * TRACK_WIDTH_INCHES;
-        drive(0, 24.0 * -1, turnTicks, DT_SPEED);
-        drive(24.0, 0.0, 0.0, DT_SPEED);
-        turnTicks = 90.0 / 360.0 * Math.PI * TRACK_WIDTH_INCHES;
-        drive(0.0, 0.0, turnTicks, DT_SPEED);
+        turnTicks = -135.0 / 360.0 * Math.PI * TRACK_WIDTH_INCHES;
+        drive(0.0, 0.0, turnTicks, DT_SPEED / 2.0);
+        drive(24.0 * -0.75, 0.0, 0.0, DT_SPEED);
+        turnTicks = -90.0 / 360.0 * Math.PI * TRACK_WIDTH_INCHES;
+        drive(0.0, 0.0, turnTicks, DT_SPEED / 2.0);
         start_intake();
-        drive(24.0, 0.0, 0.0, DT_SPEED);
+        drive(24.0 * 1.5, 0.0, 0.0, DT_SPEED / 4.0);
         end_intake();
-        drive(24.0 * -1, 0.0, 0.0, DT_SPEED);
-        drive(0.0, 0.0, turnTicks, DT_SPEED);
-        drive(24.0, 0.0, 0.0, DT_SPEED);
-        turnTicks = -45.0 / 360.0 * Math.PI * TRACK_WIDTH_INCHES;
-        drive(0.0, 0.0, turnTicks, DT_SPEED);
-        outtake(3.0);
 
         telemetry.addData("Status", "AUTO Complete");
         telemetry.update();
@@ -93,12 +90,13 @@ public class NormalAuto extends LinearOpMode {
 
     private void drive(double axial, double lateral, double turn, double power) {
         double adjLateral = lateral * STRAFE_CORRECTION;
+        double adjturn = turn * TURN_CORRECTION;
 
         // SWAPPED KINEMATICS
-        int flT = frontLeftMotor.getCurrentPosition() + (int)((-axial - adjLateral + turn) * TICKS_PER_INCH);
-        int blT = backLeftMotor.getCurrentPosition() + (int)((-axial + adjLateral + turn) * TICKS_PER_INCH);
-        int frT = frontRightMotor.getCurrentPosition() + (int)((axial + adjLateral - turn) * TICKS_PER_INCH);
-        int brT = backRightMotor.getCurrentPosition() + (int)((axial - adjLateral - turn) * TICKS_PER_INCH);
+        int flT = frontLeftMotor.getCurrentPosition() + (int)((axial - adjLateral * 1.5 + adjturn) * TICKS_PER_INCH);
+        int blT = backLeftMotor.getCurrentPosition() + (int)((axial + adjLateral + adjturn) * TICKS_PER_INCH);
+        int frT = frontRightMotor.getCurrentPosition() + (int)((-axial - adjLateral + adjturn) * TICKS_PER_INCH);
+        int brT = backRightMotor.getCurrentPosition() + (int)((-axial + adjLateral * 1.5 + adjturn) * TICKS_PER_INCH);
 
         frontLeftMotor.setTargetPosition(flT);
         backLeftMotor.setTargetPosition(blT);
@@ -130,18 +128,25 @@ public class NormalAuto extends LinearOpMode {
     private void end_intake() {
         IntakeMotor.setVelocity(0.0);
     }
-
     private void outtake(double seconds) {
         runtime.reset();
-        // HD Hex is 6000 RPM. (6000/60) * 28 ticks = 2800 ticks/sec
-        leftExpulsionMotor.setVelocity(2800);
-        rightExpulsionMotor.setVelocity(2800);
-        RampMotor.setVelocity(1400); // Ramp half speed
+        leftExpulsionMotor.setVelocity(1120);
+        rightExpulsionMotor.setVelocity(1120);
 
         while (opModeIsActive() && runtime.seconds() < seconds) {
-            telemetry.addLine("Expelling...");
+            myServo.setPosition(270.0/270);
+            sleep(100);
+            myServo.setPosition(160.0/270);
+            RampMotor.setVelocity(900);
+            sleep(400);
+            RampMotor.setVelocity(0.0);
+
+            telemetry.addLine("Flickering Outtake Servo...");
             telemetry.update();
         }
+
+        // Ensure everything stops
+        //
         leftExpulsionMotor.setVelocity(0);
         rightExpulsionMotor.setVelocity(0);
         RampMotor.setVelocity(0);
