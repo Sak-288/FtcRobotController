@@ -85,28 +85,9 @@ public class AprilTagWebcam {
             TagCoords.add(detectedId.ftcPose.y);
             TagCoords.add(detectedId.ftcPose.yaw);
 
-            // Tis temp - only for tel
-            double SPEED = 1.0;
-
-            double DAMP_FACTOR = 0.05;
-
-            double y = (TagCoords.get(1) - 15) * SPEED * DAMP_FACTOR;
-            double x = -TagCoords.get(0) * SPEED * DAMP_FACTOR;
-            double rx = -TagCoords.get(2) * SPEED * 1/120;
-
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double frontLeftPower = (y + x - rx) / denominator;
-            double backLeftPower = (-y + x + rx) / denominator;
-            double frontRightPower = (-y + x - rx) / denominator;
-            double backRightPower = (y + x + rx) / denominator;
-
             telemetry.addLine(String.format("X " + TagCoords.get(0)));
             telemetry.addLine(String.format("Y " + TagCoords.get(1)));
             telemetry.addLine(String.format("Yaw " + TagCoords.get(2)));
-            telemetry.addLine(String.format("frontLeftPower : " + frontLeftPower));
-            telemetry.addLine(String.format("backLeftPower : " + backLeftPower));
-            telemetry.addLine(String.format("frontRightMotor : " + frontRightPower));
-            telemetry.addLine(String.format("backRightMotor : " + backRightPower));
 
             telemetry.update();
         }
